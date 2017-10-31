@@ -29,13 +29,15 @@ use errors::*;
 quick_main!(run);
 
 struct ExampleServer {
-    pool: CpuPool
+    pool: CpuPool,
+    timer: Timer,
 }
 
 impl ExampleServer {
-    fn new(pool: CpuPool) -> ExampleServer {
+    fn new(pool: CpuPool, timer: Timer) -> ExampleServer {
         ExampleServer {
             pool: pool,
+            timer: timer
         }
     }
 }
@@ -55,10 +57,8 @@ impl Service for ExampleServer {
                 Box::new(futures::future::ok(response))
             },
             (&Method::Get, "/slow/future") => {
-                let timer = Timer::default();
-
                 // This is a future that will resolve in 3000 ms.
-                let task = timer.sleep(Duration::from_millis(3000));
+                let task = self.timer.sleep(Duration::from_millis(3000));
 
                 // This maps the result of the timer future into a hyper response.
                 let future_response = task.then(|_| {
@@ -103,7 +103,11 @@ impl Service for ExampleServer {
 fn run() -> Result<()> {
     let addr = "127.0.0.1:3000".parse()?;
     let pool = CpuPool::new(2);
-    let server = Http::new().bind(&addr, move || Ok(ExampleServer::new(pool.clone())))?;
+    let timer = Timer::default();
+    let server = Http::new().bind(
+        &addr,
+        move || Ok(ExampleServer::new(pool.clone(), timer.clone()))
+    )?;
     server.run()?;
 
     Ok(())
