@@ -1,0 +1,9 @@
+[package]
+name = "tokio-server"
+version = "0.1.0"
+authors = ["Patrick Barrett <patrick.barrett@smartthings.com>"]
+
+[dependencies]
+error-chain = "0.11.0"
+futures = "0.1.14"
+hyper = "0.11.2"
